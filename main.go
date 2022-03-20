@@ -12,13 +12,17 @@ import (
 
 var num int
 var concurrent int
-var sweep bool
+var sweep int
 
 func main() {
 	flag.IntVar(&num, "n", 50, "图片数量")
-	flag.IntVar(&concurrent, "c", 1, "并发数量")
-	flag.BoolVar(&sweep, "s", false, "清理生成出来的水印")
+	flag.IntVar(&concurrent, "c", 5, "并发数量")
+	flag.IntVar(&sweep, "s", 1, "清理生成出来的水印")
 	flag.Parse()
+
+	defer func() {
+		pkg.Sweep(sweep)
+	}()
 
 	fmt.Printf("水印图：%d 张\n", num)
 
@@ -69,6 +73,7 @@ func goroutineGen() {
 	for i := 1; i <= num; i++ {
 		wg.Add(1)
 		id := i + 1000 // 模拟 id
+
 		go func() {
 			defer wg.Done()
 			if err = pkg.Generate(imgPath, id, water); err != nil {
@@ -88,7 +93,7 @@ func goroutineCtrlGen() {
 	startT := time.Now()
 	wg := sync.WaitGroup{}
 	// 指定缓冲数量
-	ch := make(chan struct{}, 2)
+	ch := make(chan struct{}, concurrent)
 
 	water, err := pkg.OpenPngImage("./test_water.png")
 	if err != nil {
@@ -103,7 +108,7 @@ func goroutineCtrlGen() {
 		wg.Add(1)
 
 		id := i + 1000 // 模拟 id
-		go func() {
+		pkg.Go(func() {
 			defer wg.Done()
 			ch <- struct{}{}
 
@@ -111,7 +116,7 @@ func goroutineCtrlGen() {
 				log.Println("水印图生成失败，id=" + strconv.Itoa(id))
 			}
 			<-ch
-		}()
+		})
 	}
 
 	wg.Wait()

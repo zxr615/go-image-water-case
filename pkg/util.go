@@ -107,7 +107,28 @@ func GetFont() (*truetype.Font, error) {
 	return freetype.ParseFont(fontBytes)
 }
 
-// Go 避免 go func(){} 如果方法中 抛出 panic 无法被捕获到
+// Sweep 清理图片
+func Sweep(sweep int) {
+	if sweep == 0 {
+		return
+	}
+
+	fs, err := ioutil.ReadDir("./water")
+	if err != nil {
+		log.Printf("水印图清理失败：%+v", err)
+	}
+
+	for _, v := range fs {
+		if v.Name() == ".gitkeep" {
+			continue
+		}
+		if err := os.Remove("./water/" + v.Name()); err != nil {
+			log.Printf("水印图清理失败：%+v", err)
+		}
+	}
+}
+
+// Go 避免 go func(){} 如果方法中抛出 panic 无法被捕获到
 // 或者是每在每个 go 前面都 recover() 一次，造成的代码混乱不可维护
 func Go(f func()) {
 	defer func() {
