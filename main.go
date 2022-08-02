@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-image-water-case/pkg"
 	"log"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -15,10 +16,21 @@ var concurrent int
 var sweep int
 
 func main() {
-	flag.IntVar(&num, "n", 50, "图片数量")
-	flag.IntVar(&concurrent, "c", 5, "并发数量")
-	flag.IntVar(&sweep, "s", 1, "清理生成出来的水印")
+	flag.IntVar(&num, "n", 1, "图片数量")
+	flag.IntVar(&concurrent, "c", 1, "并发数量")
+	flag.IntVar(&sweep, "s", 0, "清理生成出来的水印")
 	flag.Parse()
+
+	fmt.Println("NumCPU: ", runtime.NumCPU())
+	//go func() {
+	//	for {
+	//		time.Sleep(time.Millisecond * 100)
+	//		fmt.Println("NumGoroutine:", runtime.NumGoroutine())
+	//	}
+	//}()
+
+	//pprof.StartCPUProfile(os.Stdout)
+	//defer pprof.StopCPUProfile()
 
 	defer func() {
 		pkg.Sweep(sweep)
